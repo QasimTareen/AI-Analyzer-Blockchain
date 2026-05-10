@@ -1,0 +1,9 @@
+{
+  "name": "AI Blockchain Stock Analyzer",
+  "description": "An AI-powered platform for stock trend predictions and on-chain analysis verification, featuring secure email multi-factor authentication and profile customization.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

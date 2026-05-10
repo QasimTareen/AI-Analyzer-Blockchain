@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isVerifiedUser() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.provider_id == 'google.com');
+    }
+
+    // Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'email', 'isVerified', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.email is string
+        && data.isVerified is bool
+        && data.createdAt is timestamp;
+    }
+
+    function isValidLedgerRecord(data) {
+      return data.keys().hasAll(['stockName', 'analysisDate', 'predictionResult', 'createdAt', 'confidence', 'price', 'reasoning'])
+        && data.stockName is string
+        && data.predictionResult in ['BUY', 'SELL', 'NEUTRAL']
+        && data.confidence is number
+        && data.price is number
+        && data.reasoning is string
+        && data.createdAt is timestamp;
+    }
+
+    // Collection: Users
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId)
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt'])
+        );
+
+      // Subcollection: Ledger
+      match /ledger/{recordId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidLedgerRecord(incoming());
+        allow delete: if isOwner(userId);
+      }
+    }
+  }
+}

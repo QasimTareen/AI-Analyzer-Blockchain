@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user account details and verification status.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "phone": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "isVerified", "createdAt"]
+    },
+    "LedgerRecord": {
+      "title": "Ledger Record",
+      "description": "A saved stock analysis record.",
+      "type": "object",
+      "properties": {
+        "stockName": { "type": "string" },
+        "analysisDate": { "type": "string", "format": "date-time" },
+        "predictionResult": { "type": "string", "enum": ["BUY", "SELL", "NEUTRAL"] },
+        "chartSnapshot": { "type": "string" },
+        "pdfURL": { "type": "string" },
+        "confidence": { "type": "number" },
+        "price": { "type": "number" },
+        "reasoning": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["stockName", "analysisDate", "predictionResult", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Root user profile document."
+    },
+    "/users/{userId}/ledger/{recordId}": {
+      "schema": "LedgerRecord",
+      "description": "Personal ledger of stock analysis records."
+    }
+  }
+}
